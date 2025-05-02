@@ -48,8 +48,8 @@ class ProbTSDataModule(pl.LightningDataModule):
                 self.dataset_train,
                 batch_size=self.batch_size,
                 num_workers=self.num_workers,
-                persistent_workers=True,
-                pin_memory=True
+                persistent_workers=False,
+                pin_memory=True,
             )
 
     def val_dataloader(self):
