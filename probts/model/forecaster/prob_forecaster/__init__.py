@@ -5,7 +5,7 @@ from .trans_maf import Trans_MAF
 from .csdi import CSDI
 from .tsdiff import TSDiffCond
 from .binconv_multi import BinConv
-
+from .binformer import BinFormer
 # ------- add lag_llama to sys.path ---------
 try:
     import os, sys
