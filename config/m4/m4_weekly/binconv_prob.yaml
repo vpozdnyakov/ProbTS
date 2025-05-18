@@ -12,21 +12,27 @@ trainer:
   accumulate_grad_batches: 8
 model:
   forecaster:
-    class_path: probts.model.forecaster.prob_forecaster.TimeGrad
+    class_path: probts.model.forecaster.prob_forecaster.BinConv
     init_args:
-      loss_type: l2
-      diff_steps: 50
-      beta_end: 0.1
-      beta_schedule: linear
-      conditional_length: 100
-      enc_hidden_size: 64
-      enc_num_layers: 4
-      enc_dropout: 0.1
+      context_length: 39
+      num_bins: 1000
+      min_bin_value: -5.0
+      max_bin_value: 5.0
+      is_prob_forecast: true
+      scaler_type: temporal
+      kernel_size_across_bins_2d: 3
+      kernel_size_across_bins_1d: 3
+      num_filters_2d: 39
+      num_filters_1d: 39
+      kernel_size_ffn: 51
+      num_1d_layers: 2
+      num_blocks: 3
+      dropout: 0.35
+      is_cum_sum: false
       use_lags: false
       use_feat_idx_emb: false
       use_time_feat: false
-      feat_idx_emb_dim: 1
-      use_scaling: true
+      use_scaling: false
   num_samples: 100
   learning_rate: 0.001
   quantiles_num: 20
@@ -34,10 +40,10 @@ data:
   data_manager:
     class_path: probts.data.data_manager.DataManager
     init_args:
-      dataset: m4_daily
+      dataset: m4_weekly
       context_length_factor: 3
       split_val: true
-      scaler: identity # identity, standard, temporal
+      scaler: identity # identity, standard, temporal, standard_binary
   batch_size: 1
   test_batch_size: 1
   num_workers: 8

@@ -1,4 +1,4 @@
-# lightning.pytorch==2.3.0dev
+# lightning.pytorch==2.5.1
 seed_everything: true
 trainer:
   accelerator: auto
@@ -40,12 +40,16 @@ trainer:
   sync_batchnorm: false
   reload_dataloaders_every_n_epochs: 0
   default_root_dir: null
+  model_registry: null
 model:
   forecaster: null
   num_samples: 100
   learning_rate: 0.001
   quantiles_num: 10
   load_from_ckpt: null
+  sampling_weight_scheme: none
+  optimizer_config: null
+  lr_scheduler_config: null
 data:
   data_manager: null
   batch_size: 64

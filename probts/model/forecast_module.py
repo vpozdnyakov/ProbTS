@@ -110,8 +110,9 @@ class ProbTSForecastModule(pl.LightningModule):
         self.metrics_dict = update_metrics(metrics, stage, target_dict=self.metrics_dict)
         
         # Calculate norm metrics
-        norm_metrics = self.evaluator(norm_future_data, forecasts, past_data=norm_past_data, freq=self.forecaster.freq)
-        self.metrics_dict = update_metrics(norm_metrics, stage, 'norm', target_dict=self.metrics_dict)
+        # TODO: rethink it, it is useless for BinConv
+        # norm_metrics = self.evaluator(norm_future_data, forecasts, past_data=norm_past_data, freq=self.forecaster.freq)
+        # self.metrics_dict = update_metrics(norm_metrics, stage, 'norm', target_dict=self.metrics_dict)
         
         l = orin_future_data.shape[1]
         

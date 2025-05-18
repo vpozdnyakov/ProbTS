@@ -71,7 +71,6 @@ class Evaluator:
     def get_metrics(self, targets, forecasts, seasonal_error=None, samples_dim=1, loss_weights=None):
         metrics = {}
         seq_metrics = {}
-        
         # Calculate metrics for each sequence
         for i in range(targets.shape[0]):
             single_seq_metrics = self.get_sequence_metrics(
