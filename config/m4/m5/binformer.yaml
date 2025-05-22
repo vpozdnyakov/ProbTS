@@ -30,7 +30,7 @@ data:
   data_manager:
     class_path: probts.data.data_manager.DataManager
     init_args:
-      dataset: tourism_monthly
+      dataset: m5
       context_length_factor: 3
       split_val: true
       scaler: standard # identity, standard, temporal
