@@ -65,7 +65,6 @@ class TimeSeriesTransformerDecoder(nn.Module):
         tgt = x_pos
         causal_mask = self.generate_causal_mask(c).to(x.device)
         out = self.transformer_decoder(tgt=tgt, memory=x_pos, tgt_mask=causal_mask)
-        out = out[:, -1, :]
         return out 
 
 
@@ -145,7 +144,7 @@ class BinFormer(Forecaster):
         n_layers=3,
         f_hidden_size=40,
         attn_dropout=0.,
-        scaler_type: Union[Literal["standard", "temporal", "None"], None] = "temporal",
+        scaler_type: Union[Literal["standard", "temporal", "None"], None] = None,
         **kwargs,
     ) -> None:
         """
@@ -205,8 +204,6 @@ class BinFormer(Forecaster):
             x = x.squeeze()
         x = x.float()
         # x: (batch_size, context_length, num_bins)
-        batch_size, context_length, num_bins = x.shape
-        assert context_length == self.context_length, "Mismatch in context length"
         out = self.layers[layer_id](x)
         return out
 
@@ -236,22 +233,11 @@ class BinFormer(Forecaster):
             else:
                 c_inputs = inputs[:, :, c : c + 1]
             target = c_inputs[:, -self.prediction_length :, :]
-
-            if len(target.shape) == 4:
-                target = target.squeeze(-2)
-
-            c_inputs = sliding_window_batch(
-                c_inputs, self.context_length, self.prediction_length
-            ).float()
-            outputs = self(c_inputs.view(-1, *c_inputs.shape[2:]))
+            outputs = self(c_inputs)[:, -self.prediction_length:, :]
             
-            c_loss = F.binary_cross_entropy_with_logits(
-                input=outputs,
-                target=target.reshape(-1, *target.shape[2:]),
-            )
+            c_loss = F.binary_cross_entropy_with_logits(input=outputs, target=target)
             losses.append(c_loss)
         loss = torch.stack(losses).mean()
-        # print(f'loss: {loss}')
         return loss
 
     def forecast(self, batch_data, num_samples=None):
@@ -277,7 +263,7 @@ class BinFormer(Forecaster):
             c_forecasts = []
             for _ in range(self.prediction_length):
                 pred = F.sigmoid(self(current_context))  # (B, D)
-                # print(pred.min(), pred.max())
+                pred = pred[:, -1, :]
                 pred, _ = get_sequence_from_prob(pred, do_sample)
                 pred = pred.int()
                 c_forecasts.append(pred.unsqueeze(1))  # (B, 1, D)
