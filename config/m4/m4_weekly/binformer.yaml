@@ -20,7 +20,7 @@ model:
       max_bin_value: 5.0
       is_prob_forecast: true
       scaler_type: temporal
-      dropout: 0.3
+      attn_dropout: 0.3
       f_hidden_size: 32
       n_layers: 3
       n_heads: 8

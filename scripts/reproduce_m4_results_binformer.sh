@@ -5,7 +5,7 @@ LOG_DIR=./exps
 
 for SEED in 0
 do
-    for DATASET in 'tourism_monthly'
+    for DATASET in 'm4_weekly'
     do
         for MODEL in 'binformer'
         do
