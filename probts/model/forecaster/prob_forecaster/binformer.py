@@ -35,15 +35,15 @@ class TimeSeriesTransformerDecoder(nn.Module):
     ):
         super().__init__()
         self.pos_encoder = PositionalEncoding(d_model, max_len)
-        decoder_layer = nn.TransformerDecoderLayer(
+        decoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
             nhead=nhead,
             dim_feedforward=dim_feedforward,
             dropout=dropout,
             batch_first=True,
         )
-        self.transformer_decoder = nn.TransformerDecoder(
-            decoder_layer, num_layers=num_layers
+        self.transformer = nn.TransformerEncoder(
+            decoder_layer, num_layers=num_layers,
         )
 
     def generate_causal_mask(self, size):
@@ -61,27 +61,10 @@ class TimeSeriesTransformerDecoder(nn.Module):
         returns: Tensor of shape (b, c, d) where each vector is a one-step forecast
         """
         b, c, d = x.shape
-        x_pos = self.pos_encoder(x)
-        tgt = x_pos
+        x_pos = self.pos_encoder(x) + x
         causal_mask = self.generate_causal_mask(c).to(x.device)
-        out = self.transformer_decoder(tgt=tgt, memory=x_pos, tgt_mask=causal_mask)
-        return out 
-
-
-def sliding_window_batch(x, L, H):
-    if len(x.shape) == 4:
-        x = x.squeeze()
-    """
-    x: Tensor of shape (B, L+H, C)
-    Returns: Tensor of shape (B, H, L, C)
-    """
-    B, total_len, C = x.shape
-    assert total_len >= L + H, "Not enough sequence length for given L and H"
-
-    windows = [
-        x[:, h : h + L, :].unsqueeze(1) for h in range(H)
-    ]  # list of (B, 1, L, C)
-    return torch.cat(windows, dim=1)  # (B, H, L, C)
+        out = self.transformer(src=x_pos, mask=causal_mask, is_causal=True)
+        return out
 
 
 def get_sequence_from_prob(p: torch.Tensor, is_sample: bool, eps: float = 1e-6):
@@ -139,11 +122,11 @@ class BinFormer(Forecaster):
         num_bins: int,
         min_bin_value=-10.0,
         max_bin_value=10.0,
-        dropout=0.2,
         n_heads=4,
         n_layers=3,
-        f_hidden_size=40,
-        attn_dropout=0.,
+        d_model=32,
+        f_hidden_size=32 * 4,
+        attn_dropout=0.0,
         scaler_type: Union[Literal["standard", "temporal", "None"], None] = None,
         **kwargs,
     ) -> None:
@@ -184,17 +167,20 @@ class BinFormer(Forecaster):
             ]
         else:
             assert False, f"The scaler type {scaler_type} is not supported"
-        self.dropout = nn.Dropout(dropout)
 
         layers = []
-        for i in range(kwargs["target_dim"]):
+        for _ in range(kwargs["target_dim"]):
             layers.append(
-                TimeSeriesTransformerDecoder(
-                    d_model=num_bins,
-                    nhead=n_heads,
-                    num_layers=n_layers,
-                    dim_feedforward=f_hidden_size,
-                    dropout=attn_dropout,
+                nn.Sequential(
+                    nn.Linear(num_bins, d_model),
+                    TimeSeriesTransformerDecoder(
+                        d_model=d_model,
+                        nhead=n_heads,
+                        num_layers=n_layers,
+                        dim_feedforward=f_hidden_size,
+                        dropout=attn_dropout,
+                    ),
+                    nn.Linear(d_model, num_bins),
                 )
             )
         self.layers = nn.ModuleList(layers)
@@ -233,8 +219,8 @@ class BinFormer(Forecaster):
             else:
                 c_inputs = inputs[:, :, c : c + 1]
             target = c_inputs[:, -self.prediction_length :, :]
-            outputs = self(c_inputs)[:, -self.prediction_length:, :]
-            
+            outputs = self(c_inputs)[:, -self.prediction_length :, :]
+
             c_loss = F.binary_cross_entropy_with_logits(input=outputs, target=target)
             losses.append(c_loss)
         loss = torch.stack(losses).mean()

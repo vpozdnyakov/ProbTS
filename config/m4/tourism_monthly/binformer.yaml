@@ -7,7 +7,7 @@ trainer:
   max_epochs: 50
   use_distributed_sampler: false
   limit_train_batches: 800
-  log_every_n_steps: 2
+  log_every_n_steps: 5
   default_root_dir: ./results
   accumulate_grad_batches: 8
 model:
@@ -20,10 +20,11 @@ model:
       max_bin_value: 5.0
       is_prob_forecast: true
       scaler_type: temporal
-      dropout: 0.3
-      f_hidden_size: 64
+      d_model: 64
+      f_hidden_size: 128
       n_layers: 3
-      n_heads: 8
+      n_heads: 4
+      attn_dropout: 0.2
   learning_rate: 0.0001
   quantiles_num: 20
 data:
@@ -35,5 +36,5 @@ data:
       split_val: true
       scaler: standard # identity, standard, temporal
   batch_size: 1
-  test_batch_size: 32
+  test_batch_size: 8
   num_workers: 8

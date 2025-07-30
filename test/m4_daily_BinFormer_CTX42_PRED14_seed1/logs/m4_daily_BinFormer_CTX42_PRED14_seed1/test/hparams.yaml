@@ -1,0 +1,63 @@
+_instantiator: lightning.pytorch.cli.instantiate_module
+batch_size: 1
+data_manager:
+  class_path: probts.DataManager
+  init_args:
+    auto_search: false
+    context_length: null
+    context_length_factor: 3
+    continuous_sample: false
+    data_path: null
+    dataset: m4_daily
+    freq: null
+    history_length: null
+    multivariate: true
+    path: ./datasets
+    prediction_length: null
+    scaler: standard
+    split_val: true
+    test_ratio: 0.2
+    test_rolling_length: 96
+    timeenc: 1
+    train_ctx_len: null
+    train_pred_len_list: null
+    train_ratio: 0.7
+    val_ctx_len: null
+    val_pred_len_list: null
+    var_specific_norm: true
+forecaster:
+  class_path: probts.model.forecaster.BinFormer
+  init_args:
+    attn_dropout: 0.0
+    autoregressive: false
+    context_length: 72
+    dataset: null
+    dropout: 0.3
+    f_hidden_size: 32
+    feat_idx_emb_dim: 1
+    freq: null
+    is_prob_forecast: true
+    lags_list: null
+    max_bin_value: 5.0
+    min_bin_value: -5.0
+    n_heads: 8
+    n_layers: 3
+    no_training: true
+    num_bins: 1000
+    prediction_length: null
+    scaler_type: temporal
+    target_dim: null
+    time_feat_dim: 1
+    use_feat_idx_emb: false
+    use_lags: false
+    use_scaling: false
+    use_time_feat: false
+learning_rate: 0.0001
+load_from_ckpt: null
+lr_scheduler_config: null
+num_samples: 100
+num_workers: 8
+optimizer_config: null
+quantiles_num: 20
+sampling_weight_scheme: none
+test_batch_size: 32

@@ -408,13 +408,6 @@ class DataManager:
             test_set = test_grouper(self.dataset_raw.test)
             self.scaler.fit(torch.tensor(train_set[0]['target'].transpose(1, 0)))
             self.global_mean = torch.mean(torch.tensor(train_set[0]['target']), dim=-1)
-
-            # split_val
-            if self.split_val:
-                train_set, val_set = split_train_val(train_set, self.num_test_dates, self.context_length,
-                                                     self.prediction_length, self.freq)
-            else:
-                val_set = None
         else:
             self.target_dim = 1
             self.multivariate = False
@@ -422,7 +415,12 @@ class DataManager:
             train_set = self.dataset_raw.train
             test_set = self.dataset_raw.test
             test_set = truncate_test(test_set, self.context_length, self.prediction_length, self.freq)
-            # for univariate dataset, e.g., M4 and M5, no validation set is used
+        
+        # split_val
+        if self.split_val:
+            train_set, val_set = split_train_val(train_set, self.num_test_dates, self.context_length,
+                                                    self.prediction_length, self.freq)
+        else:
             val_set = None
 
         if val_set is None:
